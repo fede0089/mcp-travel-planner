@@ -1,0 +1,25 @@
+[
+  {
+    "name": "about",
+    "description": "Devuelve un saludo",
+    "parameters": {
+      "type": "object",
+      "properties": { "name": { "type": "string" } },
+      "required": ["name"]
+    }
+  },
+  {
+    "name": "calculate-distance",
+    "description": "Calcula la distancia entre dos puntos geográficos",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "startLat": { "type": "number" },
+        "startLng": { "type": "number" },
+        "endLat": { "type": "number" },
+        "endLng": { "type": "number" }
+      },
+      "required": ["startLat", "startLng", "endLat", "endLng"]
+    }
+  }
+]
