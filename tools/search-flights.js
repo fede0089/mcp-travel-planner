@@ -1,19 +1,5 @@
 import { z } from "zod";
-import Amadeus from "amadeus";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-if (!process.env.AMADEUS_CLIENT_ID || !process.env.AMADEUS_CLIENT_SECRET) {
-  throw new Error(
-    "Las credenciales de Amadeus no están configuradas en el archivo .env"
-  );
-}
-
-const amadeus = new Amadeus({
-  clientId: process.env.AMADEUS_CLIENT_ID,
-  clientSecret: process.env.AMADEUS_CLIENT_SECRET,
-});
+import { amadeus } from "../config/amadeus.js";
 
 export const schema = {
   originLocationCode: z
@@ -42,7 +28,17 @@ export const schema = {
     .string()
     .optional()
     .describe("Códigos IATA de aerolíneas separados por coma (ej: G3,TAM)"),
-  maxPrice: z.number().optional().describe("Precio máximo en USD"),
+  children: z.number().optional().describe("Número de niños (2-11 años)"),
+  infants: z.number().optional().describe("Número de infantes (0-2 años)"),
+  travelClass: z
+    .enum(["ECONOMY", "PREMIUM_ECONOMY", "BUSINESS", "FIRST"])
+    .optional()
+    .describe("Clase de viaje deseada"),
+  maxPrice: z.number().optional().describe("Precio máximo por pasajero"),
+  excludedAirlineCodes: z
+    .string()
+    .optional()
+    .describe("Códigos IATA de aerolíneas a excluir separados por coma"),
 };
 
 export const handler = async ({
@@ -53,7 +49,11 @@ export const handler = async ({
   returnDate,
   nonStop,
   includedAirlineCodes,
+  children,
+  infants,
+  travelClass,
   maxPrice,
+  excludedAirlineCodes,
 }) => {
   try {
     const searchParams = {
@@ -73,8 +73,20 @@ export const handler = async ({
     if (includedAirlineCodes) {
       searchParams.includedAirlineCodes = includedAirlineCodes.split(",");
     }
+    if (children) {
+      searchParams.children = children;
+    }
+    if (infants) {
+      searchParams.infants = infants;
+    }
+    if (travelClass) {
+      searchParams.travelClass = travelClass;
+    }
     if (maxPrice) {
       searchParams.maxPrice = maxPrice;
+    }
+    if (excludedAirlineCodes) {
+      searchParams.excludedAirlineCodes = excludedAirlineCodes.split(",");
     }
 
     const response = await amadeus.shopping.flightOffersSearch.get(

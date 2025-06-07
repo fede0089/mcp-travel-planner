@@ -6,9 +6,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
 //Tools
-import * as aboutTool from "./tools/about.js";
-import * as calculateDistanceTool from "./tools/calculate-distance.js";
 import * as searchFlightsTool from "./tools/search-flights.js";
+import * as searchCheapestDatesTool from "./tools/search-cheapest-dates.js";
 
 console.log("Starting server...");
 
@@ -20,16 +19,15 @@ const mcpServer = new McpServer({
   version: "0.1.0",
 });
 
-mcpServer.tool("about", aboutTool.schema, aboutTool.handler);
-mcpServer.tool(
-  "calculate-distance",
-  calculateDistanceTool.schema,
-  calculateDistanceTool.handler
-);
 mcpServer.tool(
   "search-flights",
   searchFlightsTool.schema,
   searchFlightsTool.handler
+);
+mcpServer.tool(
+  "search-cheapest-dates",
+  searchCheapestDatesTool.schema,
+  searchCheapestDatesTool.handler
 );
 
 app.post("/mcp", async (req, res) => {
