@@ -8,6 +8,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 //Tools
 import * as aboutTool from "./tools/about.js";
 import * as calculateDistanceTool from "./tools/calculate-distance.js";
+import * as searchFlightsTool from "./tools/search-flights.js";
 
 console.log("Starting server...");
 
@@ -24,6 +25,11 @@ mcpServer.tool(
   "calculate-distance",
   calculateDistanceTool.schema,
   calculateDistanceTool.handler
+);
+mcpServer.tool(
+  "search-flights",
+  searchFlightsTool.schema,
+  searchFlightsTool.handler
 );
 
 app.post("/mcp", async (req, res) => {
