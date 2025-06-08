@@ -2,11 +2,13 @@
   "name": "mcp-travel-planner",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index-http.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon index.js",
-    "start": "node index.js"
+    "dev:http": "nodemon index-http.js",
+    "dev:stdio": "nodemon index-stdio.js",
+    "start:http": "node index-http.js",
+    "start:stdio": "node index-stdio.js"
   },
   "keywords": [],
   "author": "",
