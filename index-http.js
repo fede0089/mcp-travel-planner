@@ -6,7 +6,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
 //Tools
-import * as searchFlightsTool from "./tools/search-flights.js";
+import * as searchFlightsOffersTool from "./tools/search-flights-offers.js";
+import * as listHotelsByCityTool from "./tools/list-hotels-by-city.js";
 
 console.log("Starting HTTP server...");
 
@@ -20,9 +21,15 @@ const mcpServer = new McpServer({
 
 // Registrar herramientas
 mcpServer.tool(
-  "search-flights",
-  searchFlightsTool.schema,
-  searchFlightsTool.handler
+  "search-flights-offers",
+  searchFlightsOffersTool.schema,
+  searchFlightsOffersTool.handler
+);
+
+mcpServer.tool(
+  "list-hotels-by-city",
+  listHotelsByCityTool.schema,
+  listHotelsByCityTool.handler
 );
 
 // Middleware para manejo de errores

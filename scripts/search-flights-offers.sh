@@ -8,7 +8,7 @@ response=$(curl -s -X POST http://localhost:3333/mcp \
        "jsonrpc":"2.0","id":99,
        "method":"tools/call",
        "params":{
-         "name":"search-flights",
+         "name":"search-flights-offers",
          "arguments":{
            "originLocationCode":"EZE",
            "destinationLocationCode":"GIG",
