@@ -7,6 +7,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 //Tools
 import * as searchFlightsOffersTool from "./tools/search-flights-offers.js";
 import * as listHotelsByCityTool from "./tools/list-hotels-by-city.js";
+import * as searchHotelsOffersTool from "./tools/search-hotels-offers.js";
 
 const mcpServer = new McpServer({
   name: "travel-planner",
@@ -24,6 +25,12 @@ mcpServer.tool(
   "list-hotels-by-city",
   listHotelsByCityTool.schema,
   listHotelsByCityTool.handler
+);
+
+mcpServer.tool(
+  "search-hotels-offers",
+  searchHotelsOffersTool.schema,
+  searchHotelsOffersTool.handler
 );
 
 async function startServer() {

@@ -8,6 +8,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 //Tools
 import * as searchFlightsOffersTool from "./tools/search-flights-offers.js";
 import * as listHotelsByCityTool from "./tools/list-hotels-by-city.js";
+import * as searchHotelsOffersTool from "./tools/search-hotels-offers.js";
 
 console.log("Starting HTTP server...");
 
@@ -30,6 +31,12 @@ mcpServer.tool(
   "list-hotels-by-city",
   listHotelsByCityTool.schema,
   listHotelsByCityTool.handler
+);
+
+mcpServer.tool(
+  "search-hotels-offers",
+  searchHotelsOffersTool.schema,
+  searchHotelsOffersTool.handler
 );
 
 // Middleware para manejo de errores
