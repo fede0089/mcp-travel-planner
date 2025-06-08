@@ -11,15 +11,13 @@ response=$(curl -s -X POST http://localhost:3333/mcp \
          "name":"search-flights",
          "arguments":{
            "originLocationCode":"EZE",
-           "destinationLocationCode":"BKK",
+           "destinationLocationCode":"GIG",
            "departureDate":"2025-07-10",
-           "returnDate":"2025-07-15",
-           "adults": 1,
-           "travelClass": "ECONOMY",
-           "maxPrice": 3000
+           "returnDate":"2025-07-20",
+           "adults": 1
          }
        }
      }')
 
 # Extraer solo el JSON de la respuesta y formatearlo
-echo "$response" | grep -o '{"result".*}' | jq '.result.content[0].data' 
+echo "$response" | grep -A1 'event: message' | grep 'data:' | sed 's/^data: //' | jq '.result.content[0].text' | jq 'fromjson' 

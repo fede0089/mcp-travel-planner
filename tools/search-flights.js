@@ -99,27 +99,42 @@ export const handler = async ({
       const lastSeg = (it) => it.segments[it.segments.length - 1];
 
       return {
-        offerId: o.id,
-        price: o.price.total,
-        currency: o.price.currency,
-        airline: o.validatingAirlineCodes[0],
-        dep: outbound.segments[0].departure.at,
-        arr: lastSeg(outbound).arrival.at,
-        duration: outbound.duration,
-        stops: outbound.segments.length - 1,
-        depReturn: inbound?.segments[0].departure.at ?? null,
-        arrReturn: inbound ? lastSeg(inbound).arrival.at : null,
-        durationReturn: inbound?.duration ?? null,
-        stopsReturn: inbound ? inbound.segments.length - 1 : null,
-        deepLink: o.links?.flightOffers ?? null,
+        flightOfferId: o.id,
+
+        price: {
+          total: o.price.total,
+          currency: o.price.currency,
+        },
+
+        airline: {
+          code: o.validatingAirlineCodes[0],
+        },
+
+        outboundFlight: {
+          departureTime: outbound.segments[0].departure.at,
+          arrivalTime: lastSeg(outbound).arrival.at,
+          duration: outbound.duration,
+          numberOfStops: outbound.segments.length - 1,
+        },
+
+        returnFlight: inbound
+          ? {
+              departureTime: inbound.segments[0].departure.at,
+              arrivalTime: lastSeg(inbound).arrival.at,
+              duration: inbound.duration,
+              numberOfStops: inbound.segments.length - 1,
+            }
+          : null,
+
+        bookingUrl: o.links?.flightOffers ?? null,
       };
     });
 
     return {
       content: [
         {
-          type: "json",
-          data: flights,
+          type: "text",
+          text: JSON.stringify(flights, null, 2),
         },
       ],
     };
