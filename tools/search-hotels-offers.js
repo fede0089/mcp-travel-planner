@@ -1,13 +1,82 @@
 import { z } from "zod";
 import { amadeus } from "../config/amadeus.js";
 
+const isDev = process.env.NODE_ENV === "development";
+
+const logger = {
+  info: (...args) => {
+    if (isDev) {
+      console.log("[INFO]", ...args);
+    }
+  },
+  error: (...args) => {
+    if (isDev) {
+      console.error("[ERROR]", ...args);
+    }
+  },
+};
+
 export const schema = {
-  hotelIds: z
+  cityCode: z
     .string()
-    .regex(/^[A-Za-z0-9]{8}(,[A-Za-z0-9]{8}){0,199}$/)
-    .describe(
-      "IDs de hoteles separados por coma (1-200 IDs, 8 caracteres cada uno)"
-    ),
+    .length(3)
+    .describe("Código IATA de la ciudad o aeropuerto (3 letras)"),
+  radius: z
+    .number()
+    .min(1)
+    .max(500)
+    .optional()
+    .describe("Radio de búsqueda en torno al centro de la ciudad (1-500)"),
+  radiusUnit: z
+    .enum(["KM", "MI"])
+    .optional()
+    .describe("Unidad del radio (KM o MI)"),
+  amenities: z
+    .array(
+      z.enum([
+        "SWIMMING_POOL",
+        "SPA",
+        "FITNESS_CENTER",
+        "AIR_CONDITIONING",
+        "RESTAURANT",
+        "PARKING",
+        "PETS_ALLOWED",
+        "AIRPORT_SHUTTLE",
+        "BUSINESS_CENTER",
+        "DISABLED_FACILITIES",
+        "WIFI",
+        "MEETING_ROOMS",
+        "NO_KID_ALLOWED",
+        "TENNIS",
+        "GOLF",
+        "KITCHEN",
+        "ANIMAL_WATCHING",
+        "BABY-SITTING",
+        "BEACH",
+        "CASINO",
+        "JACUZZI",
+        "SAUNA",
+        "SOLARIUM",
+        "MASSAGE",
+        "VALET_PARKING",
+        "BAR or LOUNGE",
+        "KIDS_WELCOME",
+        "NO_PORN_FILMS",
+        "MINIBAR",
+        "TELEVISION",
+        "WI-FI_IN_ROOM",
+        "ROOM_SERVICE",
+        "GUARDED_PARKG",
+        "SERV_SPEC_MENU",
+      ])
+    )
+    .optional()
+    .describe("Lista de servicios del hotel (ej: ['SWIMMING_POOL', 'WIFI'])"),
+  ratings: z
+    .string()
+    .regex(/^[1-5](,[1-5]){0,3}$/)
+    .optional()
+    .describe("Categorías de estrellas separadas por coma (ej: 3,4,5)"),
   adults: z
     .number()
     .min(1)
@@ -33,23 +102,16 @@ export const schema = {
     .array(z.number().min(0).max(17))
     .optional()
     .describe("Edades de los niños (0-17 años)"),
-  countryOfResidence: z
-    .string()
-    .length(2)
-    .optional()
-    .describe("Código de país ISO 3166-1 alfa-2"),
   boardType: z
-    .enum(["ROOM_ONLY", "BREAKFAST", "HALF_BOARD", "FULL_BOARD"])
+    .enum([
+      "ROOM_ONLY",
+      "BREAKFAST",
+      "HALF_BOARD",
+      "FULL_BOARD",
+      "ALL_INCLUSIVE",
+    ])
     .optional()
     .describe("Tipo de pensión"),
-  bestRateOnly: z
-    .boolean()
-    .optional()
-    .describe("Si es true, devuelve solo la mejor tarifa por hotel"),
-  includeClosed: z
-    .boolean()
-    .optional()
-    .describe("Si es true, incluye ofertas no reservables"),
   priceRange: z
     .string()
     .regex(/^\d+-\d+$/)
@@ -66,92 +128,174 @@ export const schema = {
 };
 
 export const handler = async ({
-  hotelIds,
+  cityCode,
+  radius,
+  radiusUnit,
+  amenities,
+  ratings,
   adults,
   checkInDate,
   checkOutDate,
   roomQuantity,
   children,
   childAges,
-  countryOfResidence,
   boardType,
-  bestRateOnly,
-  includeClosed,
   priceRange,
   sort,
   view,
 }) => {
   try {
-    const searchParams = {
-      hotelIds: hotelIds,
-      adults,
-      checkInDate,
-      currency: "USD",
+    const listParams = {
+      cityCode,
     };
 
-    if (checkOutDate) {
-      searchParams.checkOutDate = checkOutDate;
+    if (radius) {
+      listParams.radius = radius;
     }
-    if (roomQuantity) {
-      searchParams.roomQuantity = roomQuantity;
+    if (radiusUnit) {
+      listParams.radiusUnit = radiusUnit;
     }
-    if (children) {
-      searchParams.children = children;
-      if (childAges) {
-        searchParams.childAges = childAges;
+    if (amenities && amenities.length > 0) {
+      listParams.amenities = amenities.join(",");
+    }
+    if (ratings) {
+      listParams.ratings = ratings;
+    }
+
+    logger.info("Searching hotels in city:", listParams);
+
+    const listResponse =
+      await amadeus.referenceData.locations.hotels.byCity.get(listParams);
+    logger.info("Hotels found:", listResponse.data.length);
+
+    const allHotels = listResponse.data;
+    const offers = [];
+    const BATCH_SIZE = 10;
+    const MAX_OFFERS = 10;
+
+    for (
+      let i = 0;
+      i < allHotels.length && offers.length < MAX_OFFERS;
+      i += BATCH_SIZE
+    ) {
+      const hotelBatch = allHotels.slice(i, i + BATCH_SIZE);
+      const hotelIds = hotelBatch.map((hotel) => hotel.hotelId).join(",");
+
+      const searchParams = {
+        hotelIds: hotelIds,
+        adults,
+        checkInDate,
+        currency: "USD",
+        includeClosed: false,
+        bestRateOnly: true,
+      };
+
+      if (checkOutDate) {
+        searchParams.checkOutDate = checkOutDate;
+      }
+      if (roomQuantity) {
+        searchParams.roomQuantity = roomQuantity;
+      }
+      if (children) {
+        searchParams.children = children;
+        if (childAges && childAges.length > 0) {
+          searchParams.childAges = childAges.join(",");
+        }
+      }
+      if (boardType) {
+        searchParams.boardType = boardType;
+      }
+      if (priceRange) {
+        const [min, max] = priceRange.split("-");
+        searchParams.priceRange = {
+          min: parseInt(min),
+          max: parseInt(max),
+        };
+      }
+      if (sort) {
+        searchParams.sort = sort;
+      }
+      if (view) {
+        searchParams.view = view;
+      }
+
+      logger.info("Searching hotel offers:", searchParams);
+
+      try {
+        const offersResponse = await amadeus.shopping.hotelOffersSearch.get(
+          searchParams
+        );
+        logger.info("Offers found in batch:", offersResponse.data.length);
+
+        const newOffers = offersResponse.data.map((offer) => {
+          const hotelInfo = allHotels.find(
+            (h) => h.hotelId === offer.hotel.hotelId
+          );
+
+          return {
+            name: offer.hotel.name,
+            rating: hotelInfo?.rating,
+            amenities: hotelInfo?.amenities,
+            price: {
+              total: offer.offers[0].price.total,
+              currency: offer.offers[0].price.currency,
+            },
+            room: {
+              type: offer.offers[0].room.type,
+              description: offer.offers[0].room.description,
+            },
+            boardType: offer.offers[0].boardType,
+          };
+        });
+
+        offers.push(...newOffers);
+
+        if (offers.length >= MAX_OFFERS) {
+          break;
+        }
+      } catch (error) {
+        logger.error("Error searching hotel offers:", {
+          message: error.message,
+          code: error.code,
+          description: error.description,
+          status: error.response?.statusCode,
+          response: error.response?.body,
+        });
+        continue;
       }
     }
-    if (countryOfResidence) {
-      searchParams.countryOfResidence = countryOfResidence;
-    }
-    if (boardType) {
-      searchParams.boardType = boardType;
-    }
-    if (bestRateOnly) {
-      searchParams.bestRateOnly = bestRateOnly;
-    }
-    if (includeClosed) {
-      searchParams.includeClosed = includeClosed;
-    }
-    if (priceRange) {
-      const [min, max] = priceRange.split("-");
-      searchParams.priceRange = {
-        min: parseInt(min),
-        max: parseInt(max),
+
+    const finalOffers = offers.slice(0, MAX_OFFERS);
+    logger.info("Total offers found:", finalOffers.length);
+
+    if (finalOffers.length === 0) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "No se encontraron ofertas para los criterios especificados.",
+          },
+        ],
       };
     }
-    if (sort) {
-      searchParams.sort = sort;
-    }
-    if (view) {
-      searchParams.view = view;
-    }
-
-    const response = await amadeus.shopping.hotelOffersSearch.get(searchParams);
-
-    const offers = response.data.map((offer) => ({
-      hotelId: offer.hotel.hotelId,
-      name: offer.hotel.name,
-      price: {
-        total: offer.offers[0].price.total,
-      },
-      room: {
-        type: offer.offers[0].room.type,
-        description: offer.offers[0].room.description,
-      },
-      boardType: offer.offers[0].boardType,
-    }));
 
     return {
       content: [
         {
           type: "text",
-          text: JSON.stringify(offers, null, 2),
+          text: JSON.stringify(finalOffers, null, 2),
         },
       ],
     };
   } catch (error) {
-    console.error("Error al buscar ofertas de hoteles:", error);
+    logger.error("Error searching hotels:", {
+      message: error.message,
+      code: error.code,
+      description: error.description,
+      status: error.response?.statusCode,
+      response: error.response?.body,
+      stack: error.stack,
+    });
     return {
       content: [
         {

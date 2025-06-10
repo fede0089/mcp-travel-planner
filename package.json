@@ -5,8 +5,8 @@
   "main": "index-http.js",
   "type": "module",
   "scripts": {
-    "dev:http": "nodemon index-http.js",
-    "dev:stdio": "nodemon index-stdio.js",
+    "dev:http": "NODE_ENV=development nodemon index-http.js",
+    "dev:stdio": "NODE_ENV=development nodemon index-stdio.js",
     "start:http": "node index-http.js",
     "start:stdio": "node index-stdio.js"
   },
@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/tokenizer": "^0.0.4",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "amadeus": "^11.0.0",
     "dotenv": "^16.5.0",

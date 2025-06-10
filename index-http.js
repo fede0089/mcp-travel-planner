@@ -5,32 +5,47 @@ import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-//Tools
 import * as searchFlightsOffersTool from "./tools/search-flights-offers.js";
-import * as listHotelsByCityTool from "./tools/list-hotels-by-city.js";
 import * as searchHotelsOffersTool from "./tools/search-hotels-offers.js";
 
-console.log("Starting HTTP server...");
+const isDev = process.env.NODE_ENV === "development";
+
+const logger = {
+  info: (...args) => {
+    if (isDev) {
+      console.log("[INFO]", ...args);
+    }
+  },
+  error: (...args) => {
+    if (isDev) {
+      console.error("[ERROR]", ...args);
+    }
+  },
+};
+
+logger.info("Starting HTTP server...");
 
 const app = express();
 app.use(express.json());
+
+// Middleware para logging de requests
+app.use((req, res, next) => {
+  logger.info("=== New Request ===");
+  logger.info("Method:", req.method);
+  logger.info("Path:", req.path);
+  logger.info("Body:", JSON.stringify(req.body, null, 2));
+  next();
+});
 
 const mcpServer = new McpServer({
   name: "travel-planner",
   version: "0.1.0",
 });
 
-// Registrar herramientas
 mcpServer.tool(
   "search-flights-offers",
   searchFlightsOffersTool.schema,
   searchFlightsOffersTool.handler
-);
-
-mcpServer.tool(
-  "list-hotels-by-city",
-  listHotelsByCityTool.schema,
-  listHotelsByCityTool.handler
 );
 
 mcpServer.tool(
@@ -39,9 +54,12 @@ mcpServer.tool(
   searchHotelsOffersTool.handler
 );
 
-// Middleware para manejo de errores
 app.use((err, req, res, next) => {
-  console.error("Error en el servidor:", err);
+  logger.error("=== Error ===");
+  logger.error("Error", {
+    message: err.message,
+    stack: err.stack,
+  });
   if (!res.headersSent) {
     res.status(500).json({
       jsonrpc: "2.0",
@@ -55,34 +73,18 @@ app.use((err, req, res, next) => {
 });
 
 app.post("/mcp", async (req, res) => {
-  try {
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-    });
-
-    res.on("close", () => {
-      console.log("Request closed");
-      transport.close();
-    });
-
-    await mcpServer.connect(transport);
-    await transport.handleRequest(req, res, req.body);
-  } catch (error) {
-    console.error("Error handling MCP request:", error);
-    if (!res.headersSent) {
-      res.status(500).json({
-        jsonrpc: "2.0",
-        error: {
-          code: -32603,
-          message: "Internal server error",
-        },
-        id: null,
-      });
-    }
-  }
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,
+  });
+  res.on("close", () => {
+    logger.info("Request closed");
+    transport.close();
+  });
+  await mcpServer.connect(transport);
+  await transport.handleRequest(req, res, req.body);
 });
 
 const PORT = process.env.PORT ?? 3333;
 app.listen(PORT, () => {
-  console.log(`[MCP] HTTP Server is running on http://localhost:${PORT}`);
+  logger.info(`HTTP Server is running on http://localhost:${PORT}`);
 });

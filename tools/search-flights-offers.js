@@ -1,6 +1,21 @@
 import { z } from "zod";
 import { amadeus } from "../config/amadeus.js";
 
+const isDev = process.env.NODE_ENV === "development";
+
+const logger = {
+  info: (...args) => {
+    if (isDev) {
+      console.log("[INFO]", ...args);
+    }
+  },
+  error: (...args) => {
+    if (isDev) {
+      console.error("[ERROR]", ...args);
+    }
+  },
+};
+
 export const schema = {
   originLocationCode: z
     .string()
@@ -66,7 +81,6 @@ export const handler = async ({
       currencyCode: "USD",
     };
 
-    // Agregar parámetros opcionales si están presentes
     if (nonStop) {
       searchParams.nonStop = true;
     }
@@ -89,9 +103,13 @@ export const handler = async ({
       searchParams.excludedAirlineCodes = excludedAirlineCodes.split(",");
     }
 
+    logger.info("Searching flights offers:", searchParams);
+
     const response = await amadeus.shopping.flightOffersSearch.get(
       searchParams
     );
+
+    logger.info("Flights retrieved:", response.data.length);
 
     const flights = response.data.map((o) => {
       const outbound = o.itineraries[0];
@@ -139,8 +157,15 @@ export const handler = async ({
       ],
     };
   } catch (error) {
-    console.error("Error al buscar vuelos:", error);
-    return {
+    logger.error("Error al buscar vuelos:", {
+      message: error.message,
+      code: error.code,
+      description: error.description,
+      status: error.response?.statusCode,
+      response: error.response?.body,
+      stack: error.stack,
+    });
+    const errorResponse = {
       content: [
         {
           type: "text",
@@ -150,5 +175,10 @@ export const handler = async ({
         },
       ],
     };
+    logger.error(
+      "Respuesta de error de la tool:",
+      JSON.stringify(errorResponse, null, 2)
+    );
+    return errorResponse;
   }
 };
