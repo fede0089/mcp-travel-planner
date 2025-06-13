@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { amadeus } from "../config/amadeus.js";
+import { HotelOffer } from "../entities/HotelOffer.js";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -231,21 +232,7 @@ export const handler = async ({
           const hotelInfo = allHotels.find(
             (h) => h.hotelId === offer.hotel.hotelId
           );
-
-          return {
-            name: offer.hotel.name,
-            rating: hotelInfo?.rating,
-            amenities: hotelInfo?.amenities,
-            price: {
-              total: offer.offers[0].price.total,
-              currency: offer.offers[0].price.currency,
-            },
-            room: {
-              type: offer.offers[0].room.type,
-              description: offer.offers[0].room.description,
-            },
-            boardType: offer.offers[0].boardType,
-          };
+          return HotelOffer.fromAmadeusResponse(offer, hotelInfo);
         });
 
         offers.push(...newOffers);

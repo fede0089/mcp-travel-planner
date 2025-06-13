@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { amadeus } from "../config/amadeus.js";
+import { FlightOffer } from "../entities/FlightOffer.js";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -111,42 +112,9 @@ export const handler = async ({
 
     logger.info("Flights retrieved:", response.data.length);
 
-    const flights = response.data.map((o) => {
-      const outbound = o.itineraries[0];
-      const inbound = o.itineraries[1];
-      const lastSeg = (it) => it.segments[it.segments.length - 1];
-
-      return {
-        flightOfferId: o.id,
-
-        price: {
-          total: o.price.total,
-          currency: o.price.currency,
-        },
-
-        airline: {
-          code: o.validatingAirlineCodes[0],
-        },
-
-        outboundFlight: {
-          departureTime: outbound.segments[0].departure.at,
-          arrivalTime: lastSeg(outbound).arrival.at,
-          duration: outbound.duration,
-          numberOfStops: outbound.segments.length - 1,
-        },
-
-        returnFlight: inbound
-          ? {
-              departureTime: inbound.segments[0].departure.at,
-              arrivalTime: lastSeg(inbound).arrival.at,
-              duration: inbound.duration,
-              numberOfStops: inbound.segments.length - 1,
-            }
-          : null,
-
-        bookingUrl: o.links?.flightOffers ?? null,
-      };
-    });
+    const flights = response.data.map((offer) =>
+      FlightOffer.fromAmadeusResponse(offer)
+    );
 
     return {
       content: [
