@@ -35,4 +35,54 @@ export class HotelOffer {
       boardType: this.boardType,
     };
   }
+
+  static toJSONString(offers) {
+    return JSON.stringify(offers, null, 2);
+  }
+
+  static toTableString(offers) {
+    if (!offers || offers.length === 0) {
+      return "No hay ofertas disponibles";
+    }
+
+    const headers = [
+      "Nombre",
+      "Rating",
+      "Precio Total",
+      "Tipo Habitación",
+      "Pensión",
+      "Servicios",
+    ];
+
+    const rows = offers.map((offer) => {
+      return [
+        offer.name,
+        offer.rating ? `${offer.rating}★` : "N/A",
+        `${offer.price.total} ${offer.price.currency}`,
+        offer.room.type,
+        offer.boardType || "N/A",
+        offer.amenities?.slice(0, 3).join(", ") || "N/A",
+      ];
+    });
+
+    const maxLengths = headers.map((_, i) =>
+      Math.max(headers[i].length, ...rows.map((row) => String(row[i]).length))
+    );
+
+    const formatRow = (row) =>
+      "| " +
+      row.map((cell, i) => String(cell).padEnd(maxLengths[i])).join(" | ") +
+      " |";
+
+    const separator =
+      "+-" + maxLengths.map((l) => "-".repeat(l)).join("-+-") + "-+";
+
+    return [
+      separator,
+      formatRow(headers),
+      separator,
+      ...rows.map(formatRow),
+      separator,
+    ].join("\n");
+  }
 }

@@ -120,7 +120,7 @@ export const handler = async ({
       content: [
         {
           type: "text",
-          text: JSON.stringify(flights, null, 2),
+          text: FlightOffer.toTableString(flights),
         },
       ],
     };
