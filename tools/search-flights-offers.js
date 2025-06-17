@@ -17,6 +17,11 @@ const logger = {
   },
 };
 
+export const name = "search-flights-offers";
+
+export const description =
+  "Busca ofertas de vuelos disponibles entre dos aeropuertos en fechas específicas. Usá esta herramienta cuando el usuario quiera consultar opciones de vuelo para un viaje.";
+
 export const schema = {
   originLocationCode: z
     .string()

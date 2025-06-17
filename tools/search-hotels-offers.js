@@ -17,6 +17,11 @@ const logger = {
   },
 };
 
+export const name = "search-hotels-offers";
+
+export const description =
+  "Busca ofertas de hoteles disponibles en una ciudad en fechas específicas. Usá esta herramienta cuando el usuario quiera consultar opciones de hotel para un viaje.";
+
 export const schema = {
   cityCode: z
     .string()

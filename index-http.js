@@ -43,13 +43,15 @@ const mcpServer = new McpServer({
 });
 
 mcpServer.tool(
-  "search-flights-offers",
+  searchFlightsOffersTool.name,
+  searchFlightsOffersTool.description,
   searchFlightsOffersTool.schema,
   searchFlightsOffersTool.handler
 );
 
 mcpServer.tool(
-  "search-hotels-offers",
+  searchHotelsOffersTool.name,
+  searchHotelsOffersTool.description,
   searchHotelsOffersTool.schema,
   searchHotelsOffersTool.handler
 );
