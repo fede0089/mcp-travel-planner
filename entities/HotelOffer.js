@@ -17,10 +17,7 @@ export class HotelOffer {
         total: offer.offers[0].price.total,
         currency: offer.offers[0].price.currency,
       },
-      room: {
-        type: offer.offers[0].room.type,
-        description: offer.offers[0].room.description,
-      },
+      room: offer.offers[0].room.description.text,
       boardType: offer.offers[0].boardType,
     });
   }
@@ -49,7 +46,7 @@ export class HotelOffer {
       "Nombre",
       "Rating",
       "Precio Total",
-      "Tipo Habitación",
+      "Habitación",
       "Pensión",
       "Servicios",
     ];
@@ -59,7 +56,7 @@ export class HotelOffer {
         offer.name,
         offer.rating ? `${offer.rating}★` : "N/A",
         `${offer.price.total} ${offer.price.currency}`,
-        offer.room.type,
+        offer.room,
         offer.boardType || "N/A",
         offer.amenities?.slice(0, 3).join(", ") || "N/A",
       ];
