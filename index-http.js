@@ -28,7 +28,6 @@ logger.info("Starting HTTP server...");
 const app = express();
 app.use(express.json());
 
-// Middleware para logging de requests
 app.use((req, res, next) => {
   logger.info("=== New Request ===");
   logger.info("Method:", req.method);
