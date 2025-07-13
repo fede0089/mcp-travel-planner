@@ -3,24 +3,17 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const env = process.env.AMADEUS_ENV || "test";
-const clientId =
-  env === "prod"
-    ? process.env.AMADEUS_PROD_CLIENT_ID
-    : process.env.AMADEUS_TEST_CLIENT_ID;
-const clientSecret =
-  env === "prod"
-    ? process.env.AMADEUS_PROD_CLIENT_SECRET
-    : process.env.AMADEUS_TEST_CLIENT_SECRET;
+const clientId = process.env.AMADEUS_PROD_CLIENT_ID;
+const clientSecret = process.env.AMADEUS_PROD_CLIENT_SECRET;
 
 if (!clientId || !clientSecret) {
   throw new Error(
-    `Las credenciales de Amadeus para el entorno ${env} no están configuradas en el archivo .env`
+    `Las credenciales de producción de Amadeus (AMADEUS_PROD_CLIENT_ID y AMADEUS_PROD_CLIENT_SECRET) no están configuradas.`
   );
 }
 
 export const amadeus = new Amadeus({
-  hostname: env === "prod" ? "production" : "test",
+  hostname: "production",
   clientId,
   clientSecret,
 });

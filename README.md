@@ -34,11 +34,8 @@ A continuación, se muestra un ejemplo de configuración para un agente compatib
       "command": "node",
       "args": ["/ruta/absoluta/a/mcp-travel-planner/index-stdio.js"],
       "env": {
-        "AMADEUS_TEST_CLIENT_ID": "TU_AMADEUS_TEST_ID",
-        "AMADEUS_TEST_CLIENT_SECRET": "TU_AMADEUS_TEST_SECRET",
         "AMADEUS_PROD_CLIENT_ID": "TU_AMADEUS_PROD_ID",
-        "AMADEUS_PROD_CLIENT_SECRET": "TU_AMADEUS_PROD_SECRET",
-        "AMADEUS_ENV": "prod"
+        "AMADEUS_PROD_CLIENT_SECRET": "TU_AMADEUS_PROD_SECRET"
       }
     }
   }
@@ -48,6 +45,4 @@ A continuación, se muestra un ejemplo de configuración para un agente compatib
 ### Notas de Configuración:
 
 - **`args`**: Asegúrate de que la ruta al archivo `index-stdio.js` sea la ruta absoluta en tu sistema.
-- **`env`**:
-  - Reemplaza los valores `TU_AMADEUS_*` con tus credenciales reales, que puedes obtener de [Amadeus for Developers](https://developers.amadeus.com/).
-  - Usa `AMADEUS_ENV: "prod"` para el entorno de producción o `"test"` para el de prueba.
+- **`env`**: Reemplaza los valores `TU_AMADEUS_*` con tus credenciales de producción reales, que puedes obtener de [Amadeus for Developers](https://developers.amadeus.com/). La plataforma ofrece una cuota de peticiones gratuitas mensuales que son más que suficientes para un uso particular.
