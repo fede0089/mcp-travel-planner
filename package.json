@@ -5,6 +5,7 @@
   "main": "index-http.js",
   "type": "module",
   "scripts": {
+    "start": "npx @modelcontextprotocol/inspector node src/index.js",
     "dev:http": "NODE_ENV=development nodemon index-http.js",
     "dev:stdio": "NODE_ENV=development nodemon index-stdio.js",
     "start:http": "node index-http.js",
