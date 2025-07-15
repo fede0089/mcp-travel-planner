@@ -177,7 +177,7 @@ export const handler = async ({
     const allHotels = listResponse.data;
     const offers = [];
     const BATCH_SIZE = 10;
-    const MAX_OFFERS = 10;
+    const MAX_OFFERS = 30;
 
     for (
       let i = 0;
